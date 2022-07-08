@@ -251,6 +251,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-background-timer') // for timer element lib
     implementation fileTree(dir: "libs", include: ["*.jar"])
 
     //noinspection GradleDynamicVersion

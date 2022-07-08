@@ -1,14 +1,16 @@
 'use strict';
-import React, { useState, useEffect } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Modal, StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, PermissionsAndroid,  Pressable } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import Colors from './src/config/Colors';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import RNFS from 'react-native-fs';
+import { Timer, Countdown } from 'react-native-element-timer';
+import { CountdownCircleTimer } from 'react-native-countdown-circle-timer'
 
 
-import * as Animatable from 'react-native-animatable';
+// import * as Animatable from 'react-native-animatable';
 import Collapsible from 'react-native-collapsible';
 
 const PendingView = () => (
@@ -26,86 +28,127 @@ const PendingView = () => (
 
 
 export default function App(props) {
-
+  const countdownRef = useRef(null);
   const [isCollapsed, setCollapsed] = useState(true);
   const [flashIcon, setFlashIcon] = useState('flash-off');
   const [flashMode, setFlashMode] = useState('off');
   const [cameraType, setCameraType] = useState('back');
   const [stopWatchIcon, setStopWatchIcon] = useState('flase');
   const [modalVisible, setModalVisible] = useState(false);
-  const [documentsFolder, setDocumentsFolder] = useState('');
-
-
-
-
-
+  const [documentsFolder, setDocumentsFolder] = useState(RNFS.DownloadDirectoryPath);
+  const [timerSec, setTimerSec] = useState(0);
+  const [folderName, setFolderName] = useState('/QPics/');
+  const [showCircle, setShowCircle] = useState(false);
 
   useEffect(() => {
-
-    setDocumentsFolder(RNFS.DownloadDirectoryPath); //path of mainBundleDir of app
-    console.log('hellloooooooo', documentsFolder);
-    // var check;
-    // check =RNFS.readDir(RNFS.ExternalStorageDirectoryPath);
-    // console.log("Checking:::::::::",RNFS.readDir(RNFS.ExternalStorageDirectoryPath));
-
-
-
-
-    // RNFS.readDir(documentsFolder)
-    //   .then((result)=>{
-    //     console.log("resultssssss: ", result);
-    //     return Promise.all([RNFS.stat(result[0].path)]);
-    //   })
-    // .then((statResult) => {
-    //   if (statResult[0].isFile()) {
-    //     // if we have a file, read it
-    //     return RNFS.readFile(statResult[1], 'utf8');
-    //   }
-
-    //   return 'no file';
-    // })
-    // .then((contents) => {
-    //   // log the file contents
-    //   console.log("Contents:::::: ",contents);
-    // })
-    // .catch((err) => {
-    //   console.log("Error Message:::::  ", err.message," Error Code:::: ", err.code);
-    // });
+    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+    // PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+    // PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+  })
 
 
 
 
-  }, []);
 
+
+  // setDocumentsFolder(); //path of mainBundleDir of app
+  console.log('Path ( called From UseEffect): ', documentsFolder);
+  RNFS.mkdir(documentsFolder + folderName)
+    .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
+    .catch((err) => console.log('Folder do not created : ', err));
+
+
+
+  // useEffect(() => {
+
+  // }, []);
+  function CaptureButton() {
+    return (
+      <View
+        style={styles.capture}
+      >
+        <View
+          style={{
+            // width: 20.31,
+            width: showCircle === true ? 57 : 20.31,
+            height: showCircle === true ? 57 : 20.31,
+            // height: 20.31,
+            borderRadius: 50,
+            backgroundColor: '#E64C4C'
+          }}
+        />
+      </View>
+    )
+  }
+
+  function currentDateAsName() {
+    var date = new Date().getDate(); //Current Date
+    var month = new Date().getMonth() + 1; //Current Month
+    var year = new Date().getFullYear(); //Current Year
+    var hours = new Date().getHours(); //Current Hours
+    var min = new Date().getMinutes(); //Current Minutes
+    var sec = new Date().getSeconds(); //Current Seconds
+    var msec = new Date().getMilliseconds(); //Current Seconds
+
+    return (date + '' + month + '' + year
+      + '' + hours + '' + min + '' + sec + '' + msec)
+
+  };
+  console.log(currentDateAsName);
   const takePicture = async function (camera) {
-    const options = {
-      quality: 0.5,
-      base64: true,
-      // doNotSave:true,
-      // path:'/storage/emulated/0/Download',
-    };
-    const data = await camera.takePictureAsync(options);
-    //  eslint-disable-next-line
 
-    console.log('Pic Captured:-----------' , data.uri);
+    const options = {
+      quality: 0.6,
+      // base64: true,
+      // doNotSave: true,
+      path: documentsFolder + folderName + 'image' + currentDateAsName() + '.jpg',
+    };
+    const data = await camera.takePictureAsync(options)
+
+    console.log('Pic Captured:-----------', data.uri);
+
+
+    ToastAndroid.showWithGravityAndOffset(
+      "Picture Captured",
+      ToastAndroid.SHORT,
+      ToastAndroid.TOP,
+      0,
+      100
+    );
 
 
 
   };
 
   const takeVideo = async function (video) {
-    // const options = { quality: 0.5, base64: true };
+    ToastAndroid.showWithGravityAndOffset(
+      "Video Started",
+      ToastAndroid.SHORT,
+      ToastAndroid.TOP,
+      0,
+      100
+    );
     const data = await video.recordAsync({
       quality: RNCamera.Constants.VideoQuality['1080p'],
-  
+      path: documentsFolder + folderName + 'video' + currentDateAsName() + '.mp4',
+
     });
-    //  eslint-disable-next-line
+
     console.log('video captured:-----------' + data.uri);
-    // console.log('video path:-----------' + data.path);
+    
+
   };
-  
+
   const stopRecording = function (video) {
     video.stopRecording();
+    ToastAndroid.showWithGravityAndOffset(
+      "Video Saved",
+      ToastAndroid.SHORT,
+      ToastAndroid.TOP,
+      0,
+      100
+    );
   }
 
 
@@ -127,28 +170,28 @@ export default function App(props) {
         // onTap={() => console.log('Tab tab Tab')}
         // focusDepth={1}
         flashMode={RNCamera.Constants.FlashMode[flashMode]}
-        androidCameraPermissionOptions={{
-          title: 'Permission to use camera',
-          message: 'We need your permission to use your camera',
-          buttonPositive: 'Ok',
-          buttonNegative: 'Cancel',
+      // androidCameraPermissionOptions={{
+      //   title: 'Permission to use camera',
+      //   message: 'We need your permission to use your camera',
+      //   buttonPositive: 'Ok',
+      //   buttonNegative: 'Cancel',
 
 
-        }}
+      // }}
 
 
 
-        androidRecordAudioPermissionOptions={{
-          title: 'Permission to use audio recording',
-          message: 'We need your permission to use your audio',
-          buttonPositive: 'Ok',
-          buttonNegative: 'Cancel',
+      // androidRecordAudioPermissionOptions={{
+      //   title: 'Permission to use audio recording',
+      //   message: 'We need your permission to use your audio',
+      //   buttonPositive: 'Ok',
+      //   buttonNegative: 'Cancel',
 
-        }}
+      // }}
       >
         {({ camera, status, recordAudioPermissionStatus }) => {
           // console.log(camera);
-          if (status !== 'READY') return <PendingView />;
+          // if (status !== 'READY') return <PendingView />;
           return (
             <>
               <View style={{ flex: 1 }}>
@@ -162,7 +205,7 @@ export default function App(props) {
                   }}
                 >
                   <TouchableOpacity
-                  // onPress={}
+                    onPress={() => setShowCircle(!showCircle)}
                   >
                     <MaterialIcons name='close' size={30} color={Colors.white} />
                   </TouchableOpacity>
@@ -264,6 +307,80 @@ export default function App(props) {
 
                 </View>
 
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    // PaddingTop:50,
+                  }}
+                >
+                  {
+                    timerSec > 0 &&
+                    <Countdown
+                      ref={countdownRef}
+                      // style={{  }}
+                      textStyle={{ fontSize: 117, color: Colors.white }}
+                      initialSeconds={timerSec}
+                      // autoStart={true}
+                      onTimes={e => {
+                        console.log(e)
+                      }}
+                      onPause={e => { }}
+                      onEnd={(e) => {
+                        takePicture(camera);
+                        // setTimerSec(timerSec);
+
+
+
+
+                        var check = timerSec;
+                        setTimeout(() => {
+                          setTimerSec(-1);
+                          setTimeout(() => {
+                            setTimerSec(check);
+                          }, 500);
+
+                        }, 1000);
+
+
+                        console.log('cheeeeeeeeeeeeeeeeeeeeeeeeek: ', timerSec);
+
+                      }}
+                    />
+                  }
+
+                  {/* <Button
+                    style={styles.button}
+                    title={'Start'}
+                    onPress={() => {
+                      countdownRef.current.start();
+                    }}
+                  />
+                  <Button
+                    style={styles.button}
+                    title={'Pause'}
+                    onPress={() => {
+                      countdownRef.current.pause();
+                    }}
+                  />
+                  <Button
+                    style={styles.button}
+                    title={'Resume'}
+                    onPress={() => {
+                      countdownRef.current.resume();
+                    }}
+                  />
+                  <Button
+                    style={styles.button}
+                    title={'Stop'}
+                    onPress={() => {
+                      countdownRef.current.stop();
+                    }}
+                  /> */}
+
+                </View>
+
                 <View style={{ flex: 1, justifyContent: 'flex-end' }}>
                   <View
                     style={{
@@ -284,24 +401,51 @@ export default function App(props) {
                       <MaterialIcons name='flip-camera-android' size={45} color={Colors.buttonColor} />
 
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={
-                        () => takePicture(camera)
+                    <Pressable
+                      onPress={() => {
+                        if (timerSec == 0) {
+                          takePicture(camera)
+                        }
+                        else {
+                          countdownRef.current.start();
+                        }
+
+                      }}
+                      onLongPress={
+                        ()=>{
+                          setShowCircle(!showCircle)
+                          takeVideo(camera);
+                        }
                       }
-
-                      style={styles.capture}
+                      onPressOut={()=>{
+                        setShowCircle(false);
+                        stopRecording(camera);
+                      }}
+                      style={{ bottom: 37 }}
                     >
-                      <View
-                        style={{
-                          width: 20.31,
-                          height: 20.31,
-                          borderRadius: 50,
-                          backgroundColor: '#E64C4C'
-                        }}
-                      >
-
-                      </View>
-                    </TouchableOpacity>
+                      {showCircle ?
+                        <CountdownCircleTimer
+                          isPlaying={showCircle}
+                          duration={5}
+                          colors={['#E64C4C']}
+                          // colorsTime={[7, 5, 2, 0]}
+                          size={80}
+                          // strokeWidth={s}
+                          strokeLinecap={'square'}
+                          onComplete={()=>{
+                            setShowCircle(!showCircle);
+                            // stopRecording(camera);
+                          }}
+                        >
+                          {({ remainingTime }) =>
+                            <>
+                              <CaptureButton />
+                            </>
+                          }
+                        </CountdownCircleTimer>
+                        : <CaptureButton />
+                      }
+                    </Pressable>
                     <TouchableOpacity
                       style={[styles.bottomIcons,
                       {
@@ -333,13 +477,8 @@ export default function App(props) {
               >
                 <View style={{
                   flex: 1,
-                  backgroundColor: Colors.blur,
-
-
+                  backgroundColor: 'rgba(128, 128, 128,0.9)',
                 }}>
-
-
-
                   <TouchableOpacity
                     style={{
                       paddingHorizontal: 26,
@@ -378,6 +517,10 @@ export default function App(props) {
                   >
 
                     <TouchableOpacity
+                      onPress={() => {
+                        setTimerSec(0);
+                        closeModal();
+                      }}
                       style={{
                         width: 81,
                         height: 81,
@@ -388,13 +531,16 @@ export default function App(props) {
                         alignItems: 'center',
                       }}
                     >
-                      <Fontisto
-                        name='stopwatch'
-                        size={37}
-                        color={Colors.white}
+                      <Image
+                        style={{ width: 30, height: 30 }}
+                        source={require('./src/asserts/icons/noTime.png')}
                       />
                     </TouchableOpacity>
                     <TouchableOpacity
+                      onPress={() => {
+                        setTimerSec(2);
+                        closeModal();
+                      }}
                       style={{
                         width: 81,
                         height: 81,
@@ -405,13 +551,16 @@ export default function App(props) {
                         alignItems: 'center',
                       }}
                     >
-                      <Fontisto
-                        name='stopwatch'
-                        size={37}
-                        color={Colors.white}
+                      <Image
+                        style={{ width: 30, height: 30 }}
+                        source={require('./src/asserts/icons/test2.png')}
                       />
                     </TouchableOpacity>
                     <TouchableOpacity
+                      onPress={() => {
+                        setTimerSec(3);
+                        closeModal();
+                      }}
                       style={{
                         width: 81,
                         height: 81,
@@ -422,10 +571,9 @@ export default function App(props) {
                         alignItems: 'center',
                       }}
                     >
-                      <Fontisto
-                        name='stopwatch'
-                        size={37}
-                        color={Colors.white}
+                      <Image
+                        style={{ width: 30, height: 30 }}
+                        source={require('./src/asserts/icons/3secTime.png')}
                       />
                     </TouchableOpacity>
                   </View>
@@ -440,6 +588,10 @@ export default function App(props) {
                   >
 
                     <TouchableOpacity
+                      onPress={() => {
+                        setTimerSec(10);
+                        closeModal();
+                      }}
                       style={{
                         width: 81,
                         height: 81,
@@ -450,10 +602,9 @@ export default function App(props) {
                         alignItems: 'center',
                       }}
                     >
-                      <Fontisto
-                        name='stopwatch'
-                        size={37}
-                        color={Colors.white}
+                      <Image
+                        style={{ width: 30, height: 30 }}
+                        source={require('./src/asserts/icons/10secTime.png')}
                       />
                     </TouchableOpacity>
                   </View>
@@ -501,7 +652,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.buttonColor,
     justifyContent: 'center',
     alignItems: 'center',
-    bottom: 37,
+    // bottom: 37,
+  },
+
+  text: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginTop: 40,
+  },
+  timer: {
+    marginVertical: 10,
+  },
+  timerText: {
+    fontSize: 20,
+  },
+  button: {
+    marginVertical: 5,
+    backgroundColor: 'white',
+    borderRadius: 24,
+    width: 100,
   },
 });
 
