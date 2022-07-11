@@ -1,6 +1,16 @@
 'use strict';
 import React, { useState, useEffect, useRef } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View, Image, ToastAndroid, PermissionsAndroid,  Pressable } from 'react-native';
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Image,
+  ToastAndroid,
+  PermissionsAndroid,
+  Pressable
+} from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import Colors from './src/config/Colors';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -26,8 +36,36 @@ const PendingView = () => (
   </View>
 );
 
+const permissions = async () => {
+  try {
+    const externalStorageGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+    const CameraGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+    const recordAudioGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
+    if (externalStorageGranted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log("You can use the Write External Storage");
+      
+    } else {
+      console.log("External Storage permission denied");
+    }
+    if (CameraGranted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log("You can use the Write Camera");
+    } else {
+      console.log("Camera permission denied");
+    }
+    if (recordAudioGranted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log("You can use the Write Record Audio");
+    } else {
+      console.log("Record Audio permission denied");
+    }
+  }
+  catch (err) {
+    console.warn(err);
+  }
+};
+
 
 export default function App(props) {
+  permissions();
   const countdownRef = useRef(null);
   const [isCollapsed, setCollapsed] = useState(true);
   const [flashIcon, setFlashIcon] = useState('flash-off');
@@ -35,34 +73,26 @@ export default function App(props) {
   const [cameraType, setCameraType] = useState('back');
   const [stopWatchIcon, setStopWatchIcon] = useState('flase');
   const [modalVisible, setModalVisible] = useState(false);
-  const [documentsFolder, setDocumentsFolder] = useState(RNFS.DownloadDirectoryPath);
+  const [documentsFolder, setDocumentsFolder] = useState('');
   const [timerSec, setTimerSec] = useState(0);
   const [folderName, setFolderName] = useState('/QPics/');
   const [showCircle, setShowCircle] = useState(false);
 
+
   useEffect(() => {
-    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
-    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
-    // PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
-    // PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
-  })
+        setDocumentsFolder(RNFS.DownloadDirectoryPath);
+        console.log('Path : ', documentsFolder);
+
+        RNFS.mkdir(documentsFolder + folderName)
+          .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
+          .catch((err) => console.log('Folder do not created : ', err));
+  });
 
 
 
+  
 
 
-
-  // setDocumentsFolder(); //path of mainBundleDir of app
-  console.log('Path ( called From UseEffect): ', documentsFolder);
-  RNFS.mkdir(documentsFolder + folderName)
-    .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
-    .catch((err) => console.log('Folder do not created : ', err));
-
-
-
-  // useEffect(() => {
-
-  // }, []);
   function CaptureButton() {
     return (
       <View
@@ -95,7 +125,9 @@ export default function App(props) {
       + '' + hours + '' + min + '' + sec + '' + msec)
 
   };
-  console.log(currentDateAsName);
+
+
+
   const takePicture = async function (camera) {
 
     const options = {
@@ -105,7 +137,6 @@ export default function App(props) {
       path: documentsFolder + folderName + 'image' + currentDateAsName() + '.jpg',
     };
     const data = await camera.takePictureAsync(options)
-
     console.log('Pic Captured:-----------', data.uri);
 
 
@@ -136,7 +167,7 @@ export default function App(props) {
     });
 
     console.log('video captured:-----------' + data.uri);
-    
+
 
   };
 
@@ -165,14 +196,16 @@ export default function App(props) {
         // }}
         style={styles.preview}
         captureAudio={true}
+        playSoundOnCapture={true}
+        // playSoundOnRecord={true}
         type={RNCamera.Constants.Type[cameraType]}
         autoFocus={RNCamera.Constants.AutoFocus.on}
-        // onTap={() => console.log('Tab tab Tab')}
+        onTap={() => console.log('Tab tab Tab')}
         // focusDepth={1}
         flashMode={RNCamera.Constants.FlashMode[flashMode]}
       // androidCameraPermissionOptions={{
       //   title: 'Permission to use camera',
-      //   message: 'We need your permission to use your camera',
+      //   message: 'QuellxCode need your permission to use your camera',
       //   buttonPositive: 'Ok',
       //   buttonNegative: 'Cancel',
 
@@ -183,14 +216,14 @@ export default function App(props) {
 
       // androidRecordAudioPermissionOptions={{
       //   title: 'Permission to use audio recording',
-      //   message: 'We need your permission to use your audio',
+      //   message: 'QuellxCode need your permission to use your audio',
       //   buttonPositive: 'Ok',
       //   buttonNegative: 'Cancel',
 
       // }}
       >
         {({ camera, status, recordAudioPermissionStatus }) => {
-          // console.log(camera);
+          // console.log("cheeeeeeeeeeeeeeeeeeeeeeeeeek:;;;;;;", status)
           // if (status !== 'READY') return <PendingView />;
           return (
             <>
@@ -209,21 +242,6 @@ export default function App(props) {
                   >
                     <MaterialIcons name='close' size={30} color={Colors.white} />
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => takeVideo(camera)}
-                  >
-                    <MaterialIcons name='play-arrow' size={30} color={Colors.white} />
-                  </TouchableOpacity>
-
-
-
-                  <TouchableOpacity
-                    onPress={() => stopRecording(camera)}
-                  >
-                    <MaterialIcons name='stop' size={30} color={Colors.white} />
-                  </TouchableOpacity>
-
 
                   <View>
                     <TouchableOpacity
@@ -412,14 +430,14 @@ export default function App(props) {
 
                       }}
                       onLongPress={
-                        ()=>{
+                        () => {
                           setShowCircle(!showCircle)
                           takeVideo(camera);
                         }
                       }
-                      onPressOut={()=>{
+                      onPressOut={() => {
+                        if (showCircle) stopRecording(camera);
                         setShowCircle(false);
-                        stopRecording(camera);
                       }}
                       style={{ bottom: 37 }}
                     >
@@ -432,9 +450,9 @@ export default function App(props) {
                           size={80}
                           // strokeWidth={s}
                           strokeLinecap={'square'}
-                          onComplete={()=>{
-                            setShowCircle(!showCircle);
-                            // stopRecording(camera);
+                          onComplete={() => {
+                            setShowCircle(false);
+                            stopRecording(camera);
                           }}
                         >
                           {({ remainingTime }) =>
