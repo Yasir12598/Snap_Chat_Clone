@@ -64,6 +64,20 @@ export default function Camera({ navigation }) {
     const [timerSec, setTimerSec] = useState(0);
     const [folderName, setFolderName] = useState('/QPics/');
     const [showCircle, setShowCircle] = useState(false);
+    const [circleImage, setCircleImage]=useState('');
+
+    const gallaryRoundPic = ()=>{
+        RNFS.readDir(documentsFolder+'/QPics')
+        .then((res)=> {
+            setCircleImage(res[res.length-1].path);
+            // console.log("/???????????????????????:", circleImage);
+        })
+        .catch((err)=>{
+            console.log(err);
+        })
+    }
+
+    
 
 
     useEffect(() => {
@@ -75,6 +89,15 @@ export default function Camera({ navigation }) {
             .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
             .catch((err) => console.log('Folder do not created : ', err));
     }, []);
+
+        RNFS.readDir(documentsFolder+'/QPics')
+        .then((res)=> {
+            setCircleImage(res[res.length-1].path);
+            console.log("/???????????????????????:", circleImage);
+        })
+        .catch((err)=>{
+            console.log(err);
+        })
 
     function CaptureButton() {
         return (
@@ -120,6 +143,7 @@ export default function Camera({ navigation }) {
             path: documentsFolder + folderName + 'image' + currentDateAsName() + '.jpg',
         };
         const data = await camera.takePictureAsync(options)
+        gallaryRoundPic();
         console.log('Pic Captured:-----------', data.uri);
 
 
@@ -357,6 +381,7 @@ export default function Camera({ navigation }) {
                                                 else {
                                                     countdownRef.current.start();
                                                 }
+                                                // Camera();
 
                                             }}
                                             onLongPress={
@@ -399,14 +424,27 @@ export default function Camera({ navigation }) {
                                             {
                                                 width: 45,
                                                 height: 45,
-                                                backgroundColor: Colors.buttonColor,
-                                                borderRadius: 55 / 2
+                                                // backgroundColor: Colors.buttonColor,
+                                                borderRadius: 55 / 2,
+                                                justifyContent:'center',
+                                                alignItems:'center',
+                                                overflow:'hidden'
                                             }
                                             ]}
                                             onPress={() => {
                                                 navigation.navigate('Gallary')
                                             }}
                                         >
+                                            <Image
+                                                source={{uri: 'file://' + circleImage}}
+                                                style={{
+                                                    width:45,
+                                                    height:45,
+                                                    
+                                                }}  
+                                                resizeMode="cover"
+
+                                            />
                                         </TouchableOpacity>
                                     </View>
                                 </View>

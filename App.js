@@ -1,8 +1,6 @@
 import React from 'react'
 import {View, StyleSheet} from 'react-native';
 import Camera from './src/screens/Camera';
-import Gallary from './src/screens/Gallary';
-
 
 
 import { NavigationContainer } from '@react-navigation/native';
