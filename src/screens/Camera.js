@@ -29,20 +29,20 @@ const permissions = async () => {
         const CameraGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
         const recordAudioGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO);
         if (externalStorageGranted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("You can use the Write External Storage");
+            // console.log("You can use the Write External Storage");
 
         } else {
-            console.log("External Storage permission denied");
+            // console.log("External Storage permission denied");
         }
         if (CameraGranted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("You can use the Write Camera");
+            // console.log("You can use the Write Camera");
         } else {
-            console.log("Camera permission denied");
+            // console.log("Camera permission denied");
         }
         if (recordAudioGranted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("You can use the Write Record Audio");
+            // console.log("You can use the Write Record Audio");
         } else {
-            console.log("Record Audio permission denied");
+            // console.log("Record Audio permission denied");
         }
     }
     catch (err) {
@@ -64,22 +64,12 @@ export default function Camera({ navigation }) {
     const [timerSec, setTimerSec] = useState(0);
     const [folderName, setFolderName] = useState('/QPics/');
     const [showCircle, setShowCircle] = useState(false);
-    const [circleImage, setCircleImage]=useState('');
-
-    const gallaryRoundPic = ()=>{
-        RNFS.readDir(documentsFolder+'/QPics')
-        .then((res)=> {
-            setCircleImage(res[res.length-1].path);
-            // console.log("/???????????????????????:", circleImage);
-        })
-        .catch((err)=>{
-            console.log(err);
-        })
-    }
-
-    
+    const [circleImage, setCircleImage] = useState('');
+    const [callUseEffect, setCallUseEffect] = useState(false);
 
 
+
+    // console.log(circleImage.includes('.mp4'))
     useEffect(() => {
 
         // setDocumentsFolder();
@@ -88,16 +78,17 @@ export default function Camera({ navigation }) {
         RNFS.mkdir(documentsFolder + folderName)
             .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
             .catch((err) => console.log('Folder do not created : ', err));
-    }, []);
 
-        RNFS.readDir(documentsFolder+'/QPics')
-        .then((res)=> {
-            setCircleImage(res[res.length-1].path);
-            console.log("/???????????????????????:", circleImage);
-        })
-        .catch((err)=>{
-            console.log(err);
-        })
+
+        RNFS.readDir(documentsFolder + '/QPics')
+            .then((res) => {
+                setCircleImage(res[res.length - 1].path);
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }, [callUseEffect]);
+
 
     function CaptureButton() {
         return (
@@ -143,7 +134,7 @@ export default function Camera({ navigation }) {
             path: documentsFolder + folderName + 'image' + currentDateAsName() + '.jpg',
         };
         const data = await camera.takePictureAsync(options)
-        gallaryRoundPic();
+        setCallUseEffect(!callUseEffect);
         console.log('Pic Captured:-----------', data.uri);
 
 
@@ -180,6 +171,7 @@ export default function Camera({ navigation }) {
 
     const stopRecording = function (video) {
         video.stopRecording();
+        setCallUseEffect(!callUseEffect);
         ToastAndroid.showWithGravityAndOffset(
             "Video Saved",
             ToastAndroid.SHORT,
@@ -334,7 +326,7 @@ export default function Camera({ navigation }) {
                                             onPause={e => { }}
                                             onEnd={(e) => {
                                                 takePicture(camera);
-                                          
+
 
                                                 var check = timerSec;
                                                 setTimeout(() => {
@@ -426,9 +418,9 @@ export default function Camera({ navigation }) {
                                                 height: 45,
                                                 // backgroundColor: Colors.buttonColor,
                                                 borderRadius: 55 / 2,
-                                                justifyContent:'center',
-                                                alignItems:'center',
-                                                overflow:'hidden'
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                overflow: 'hidden'
                                             }
                                             ]}
                                             onPress={() => {
@@ -436,12 +428,12 @@ export default function Camera({ navigation }) {
                                             }}
                                         >
                                             <Image
-                                                source={{uri: 'file://' + circleImage}}
+                                                source={{ uri: 'file://' + circleImage }}
                                                 style={{
-                                                    width:45,
-                                                    height:45,
-                                                    
-                                                }}  
+                                                    width: 45,
+                                                    height: 45,
+
+                                                }}
                                                 resizeMode="cover"
 
                                             />
