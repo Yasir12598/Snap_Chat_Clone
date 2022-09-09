@@ -73,11 +73,11 @@ export default function Camera({ navigation }) {
     useEffect(() => {
 
         // setDocumentsFolder();
-        console.log('Path : ', documentsFolder);
+        // console.log('Path : ', documentsFolder);
 
         RNFS.mkdir(documentsFolder + folderName)
             .then((result) => console.log("Folder created Successfully at: ", documentsFolder, 'with name of :', folderName))
-            .catch((err) => console.log('Folder do not created : ', err));
+            .catch((err) => console.log( err));
 
 
         RNFS.readDir(documentsFolder + '/QPics')

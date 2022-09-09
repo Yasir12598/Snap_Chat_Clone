@@ -1,5 +1,5 @@
 import React from 'react'
-import {View, StyleSheet} from 'react-native';
+import { StyleSheet} from 'react-native';
 import Camera from './src/screens/Camera';
 
 
@@ -21,7 +21,7 @@ export default function App(props){
         <Stack.Screen name="Gallary" component={CameraRoll} />
       </Stack.Navigator>
     </NavigationContainer>
-    // <CameraRoll/>
+    
   );
 }
 
